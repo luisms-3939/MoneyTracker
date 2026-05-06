@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns'
-import { Plus, Pencil, Trash2, X, RefreshCw, CreditCard, Calendar, Repeat, Filter } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, RefreshCw, CreditCard, Calendar, Repeat, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const fmt = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n)
 
@@ -14,15 +14,15 @@ const RECURRENCE_TYPES = ['weekly', 'monthly', 'yearly']
 
 const CATEGORY_COLORS = {
   'Alquiler':    '#F43F5E',
-  'Mercadona': '#FB923C',
-  'Transportes':        '#FBBF24',
-  'Estanco':    '#8B5CF6',
-  'Klarna':    '#EC4899',
-  'Peluqueria':       '#14B8A6',
-  'Deudas':         '#EF4444',
-  'Telefono':        '#64748B',
-  'XMS':        '#6366F1',
-  'Otros':            '#94A3B8',
+  'Mercadona':   '#FB923C',
+  'Transportes': '#FBBF24',
+  'Estanco':     '#8B5CF6',
+  'Klarna':      '#EC4899',
+  'Peluqueria':  '#14B8A6',
+  'Deudas':      '#EF4444',
+  'Telefono':    '#64748B',
+  'XMS':         '#6366F1',
+  'Otros':       '#94A3B8',
 }
 
 const emptyForm = () => ({
@@ -30,6 +30,9 @@ const emptyForm = () => ({
   date: format(new Date(), 'yyyy-MM-dd'),
   recurring: false, recurrence_type: 'monthly', notes: ''
 })
+
+// Returns 'yyyy-MM' string for a date string
+const toYearMonth = (dateStr) => dateStr.slice(0, 7)
 
 export default function Expenses() {
   const [items, setItems] = useState([])
@@ -40,6 +43,9 @@ export default function Expenses() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(null)
   const [filterCat, setFilterCat] = useState('all')
+
+  // Month filter: 'all' or a 'yyyy-MM' string (defaults to current month)
+  const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'))
 
   const load = async () => {
     setLoading(true)
@@ -121,24 +127,64 @@ export default function Expenses() {
     return sorted[0] ? { name: sorted[0][0], amount: sorted[0][1] } : null
   }, [items])
 
-  const categories = useMemo(() => {
-    const set = new Set(items.map(i => i.category))
-    return ['all', ...Array.from(set).sort()]
+  // All distinct months present in data, sorted descending
+  const availableMonths = useMemo(() => {
+    const set = new Set(items.map(i => toYearMonth(i.date)))
+    return Array.from(set).sort((a, b) => b.localeCompare(a))
   }, [items])
 
-  const filtered = filterCat === 'all' ? items : items.filter(i => i.category === filterCat)
+  // Navigate between months
+  const currentMonthIndex = availableMonths.indexOf(filterMonth)
+  const canGoPrev = filterMonth !== 'all' && currentMonthIndex < availableMonths.length - 1
+  const canGoNext = filterMonth !== 'all' && currentMonthIndex > 0
 
-  // Category summary
+  const goToPrevMonth = () => {
+    if (canGoPrev) setFilterMonth(availableMonths[currentMonthIndex + 1])
+  }
+  const goToNextMonth = () => {
+    if (canGoNext) setFilterMonth(availableMonths[currentMonthIndex - 1])
+  }
+
+  // Format month label nicely: 'yyyy-MM' → 'May 2026'
+  const formatMonthLabel = (ym) => {
+    if (ym === 'all') return 'All Time'
+    const [year, month] = ym.split('-')
+    return format(new Date(Number(year), Number(month) - 1, 1), 'MMMM yyyy')
+  }
+
+  // Apply month filter first, then category filter
+  const monthFiltered = useMemo(() => {
+    if (filterMonth === 'all') return items
+    return items.filter(i => toYearMonth(i.date) === filterMonth)
+  }, [items, filterMonth])
+
+  const categories = useMemo(() => {
+    const set = new Set(monthFiltered.map(i => i.category))
+    return ['all', ...Array.from(set).sort()]
+  }, [monthFiltered])
+
+  // Reset category filter when it's no longer available after month change
+  const filtered = useMemo(() => {
+    const base = monthFiltered
+    if (filterCat === 'all') return base
+    if (!categories.includes(filterCat)) return base
+    return base.filter(i => i.category === filterCat)
+  }, [monthFiltered, filterCat, categories])
+
+  // Category breakdown for the current month filter
   const categoryBreakdown = useMemo(() => {
     const map = {}
-    items.forEach(e => {
+    monthFiltered.forEach(e => {
       if (!map[e.category]) map[e.category] = 0
       map[e.category] += Number(e.amount)
     })
     return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }, [items])
+  }, [monthFiltered])
 
   const totalAll = categoryBreakdown.reduce((s, [, v]) => s + v, 0)
+
+  // Total for currently filtered view
+  const filteredTotal = filtered.reduce((s, e) => s + Number(e.amount), 0)
 
   return (
     <div style={{ maxWidth: 900, animation: 'fadeIn 0.3s ease' }}>
@@ -166,13 +212,124 @@ export default function Expenses() {
         />
       </div>
 
+      {/* ── Month Filter Bar ── */}
+      <div style={{
+        background: 'var(--card)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius)', padding: '14px 18px',
+        marginBottom: 16,
+        display: 'flex', alignItems: 'center', gap: 12,
+      }}>
+        {/* All Time toggle */}
+        <button
+          onClick={() => setFilterMonth('all')}
+          style={{
+            padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600,
+            border: filterMonth === 'all' ? '1px solid var(--rose)' : '1px solid var(--border)',
+            background: filterMonth === 'all' ? 'rgba(244,63,94,0.12)' : 'transparent',
+            color: filterMonth === 'all' ? 'var(--rose)' : 'var(--text-muted)',
+            cursor: 'pointer', transition: 'all 0.15s',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          All Time
+        </button>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 22, background: 'var(--border)', flexShrink: 0 }} />
+
+        {/* Prev arrow */}
+        <button
+          onClick={goToPrevMonth}
+          disabled={!canGoPrev && filterMonth !== 'all'}
+          title="Previous month"
+          style={{
+            width: 28, height: 28, borderRadius: 7,
+            border: '1px solid var(--border)', background: 'transparent',
+            color: canGoPrev ? 'var(--text-subtle)' : 'var(--border)',
+            cursor: canGoPrev ? 'pointer' : 'default',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s', flexShrink: 0,
+          }}
+        >
+          <ChevronLeft size={14} />
+        </button>
+
+        {/* Month pills — scrollable row */}
+        <div style={{
+          display: 'flex', gap: 6, overflowX: 'auto', flex: 1,
+          scrollbarWidth: 'none', msOverflowStyle: 'none',
+        }}>
+          {availableMonths.length === 0 ? (
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: '28px' }}>No data yet</span>
+          ) : (
+            availableMonths.map(ym => (
+              <button
+                key={ym}
+                onClick={() => setFilterMonth(ym)}
+                style={{
+                  padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500,
+                  border: filterMonth === ym ? '1px solid var(--rose)' : '1px solid var(--border)',
+                  background: filterMonth === ym ? 'rgba(244,63,94,0.12)' : 'transparent',
+                  color: filterMonth === ym ? 'var(--rose)' : 'var(--text-muted)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                {formatMonthLabel(ym)}
+              </button>
+            ))
+          )}
+        </div>
+
+        {/* Next arrow */}
+        <button
+          onClick={goToNextMonth}
+          disabled={!canGoNext}
+          title="Next month"
+          style={{
+            width: 28, height: 28, borderRadius: 7,
+            border: '1px solid var(--border)', background: 'transparent',
+            color: canGoNext ? 'var(--text-subtle)' : 'var(--border)',
+            cursor: canGoNext ? 'pointer' : 'default',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s', flexShrink: 0,
+          }}
+        >
+          <ChevronRight size={14} />
+        </button>
+
+        {/* Period total */}
+        {filtered.length > 0 && (
+          <>
+            <div style={{ width: 1, height: 22, background: 'var(--border)', flexShrink: 0 }} />
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {filterMonth === 'all' ? 'Total' : formatMonthLabel(filterMonth)}
+              </div>
+              <div className="font-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--rose)' }}>
+                {fmt(filteredTotal)}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Category Breakdown Bar */}
       {categoryBreakdown.length > 0 && (
         <div style={{
           background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: 'var(--radius)', padding: '20px 24px', marginBottom: 16
         }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>Category Breakdown</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
+            Category Breakdown
+            {filterMonth !== 'all' && (
+              <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8 }}>
+                · {formatMonthLabel(filterMonth)}
+              </span>
+            )}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {categoryBreakdown.map(([cat, amt]) => {
               const pct = totalAll > 0 ? (amt / totalAll * 100) : 0
@@ -221,7 +378,7 @@ export default function Expenses() {
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
         ) : filtered.length === 0 ? (
-          <EmptyState onAdd={openNew} />
+          <EmptyState onAdd={openNew} monthLabel={filterMonth !== 'all' ? formatMonthLabel(filterMonth) : null} />
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -407,11 +564,13 @@ function MiniStat({ label, value, sub, icon, color }) {
   )
 }
 
-function EmptyState({ onAdd }) {
+function EmptyState({ onAdd, monthLabel }) {
   return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-      <p style={{ color: 'var(--text-subtle)', marginBottom: 16 }}>No expense entries yet</p>
+      <p style={{ color: 'var(--text-subtle)', marginBottom: 16 }}>
+        {monthLabel ? `No expenses in ${monthLabel}` : 'No expense entries yet'}
+      </p>
       <button onClick={onAdd} style={btnStyle('var(--rose)', 'rgba(244,63,94,0.12)')}>
         <Plus size={14} /> Add Expense
       </button>
