@@ -13,16 +13,16 @@ const EXPENSE_CATEGORIES = [
 const RECURRENCE_TYPES = ['weekly', 'monthly', 'yearly']
 
 const CATEGORY_COLORS = {
-  'Alquiler':    '#F43F5E',
-  'Mercadona':   '#FB923C',
+  'Alquiler': '#F43F5E',
+  'Mercadona': '#FB923C',
   'Transportes': '#FBBF24',
-  'Estanco':     '#8B5CF6',
-  'Klarna':      '#EC4899',
-  'Peluqueria':  '#14B8A6',
-  'Deudas':      '#EF4444',
-  'Telefono':    '#64748B',
-  'XMS':         '#6366F1',
-  'Otros':       '#94A3B8',
+  'Estanco': '#8B5CF6',
+  'Klarna': '#EC4899',
+  'Peluqueria': '#14B8A6',
+  'Deudas': '#EF4444',
+  'Telefono': '#64748B',
+  'XMS': '#6366F1',
+  'Otros': '#94A3B8',
 }
 
 const emptyForm = () => ({
