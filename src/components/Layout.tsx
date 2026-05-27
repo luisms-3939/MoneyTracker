@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { LayoutDashboard, TrendingUp, CreditCard, Telescope } from 'lucide-react'
 
 const NAV = [
-	{ to: '/dashboard', icon: LayoutDashboard, label: 'dashboard' },
+	{ to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
 	{ to: '/income', icon: TrendingUp, label: 'Income' },
 	{ to: '/expenses', icon: CreditCard, label: 'Expenses' },
 ]
@@ -46,7 +46,7 @@ function Sidebar() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 18,
           }}>
-            🔭
+            💶
           </div>
           <div>
             <div className="font-display" style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.3px' }}>

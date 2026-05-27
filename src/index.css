@@ -38,6 +38,7 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
