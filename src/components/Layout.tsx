@@ -33,7 +33,7 @@ export default function Layout() {
 	)
 }
 
-function Sidebar({ theme, toggle Theme }) {
+function Sidebar({ theme, toggleTheme }) {
 	return (
 		<aside style={{
 			width: 220,
