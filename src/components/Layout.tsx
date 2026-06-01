@@ -10,7 +10,11 @@ const NAV = [
 ]
 
 export default function Layout() {
-	const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+	const [theme, setTheme] = useState(() => {
+		const saved = localStorage.getItem('theme')
+			if (saved) return saved
+				return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+	})
 
 	useEffect(() => {
 		document.documentElement.setAttribute('data-theme', theme)
