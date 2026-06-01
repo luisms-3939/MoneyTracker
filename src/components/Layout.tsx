@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { LayoutDashboard, TrendingUp, CreditCard, Telescope } from 'lucide-react'
 
 const NAV = [
@@ -9,6 +10,14 @@ const NAV = [
 ]
 
 export default function Layout() {
+	const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+
+	useEffect(() => {
+		document.documentElement.setAttribute('data-theme', theme)
+		localStorage.setItem('theme', theme)
+	}, [theme])
+
+	const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
 	return (
 		<div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
 			<Sidebar />
@@ -92,6 +101,20 @@ function Sidebar() {
 
       {/* Bottom */}
       <div style={{ marginTop: 'auto', padding: '16px 8px 0', borderTop: '1px solid var(--border)' }}>
+		  <button
+          onClick={toggleTheme}
+          style={{
+            width: '100%', padding: '9px 12px', marginBottom: 12,
+            borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+            background: 'transparent', color: 'var(--text-subtle)',
+            fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8,
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            transition: 'all 0.15s',
+          }}
+        >
+          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+        </button>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
           <div style={{ fontWeight: 600, color: 'var(--text-subtle)', marginBottom: 2 }}>MoneyScope v1.0</div>
           Personal finance tracker
