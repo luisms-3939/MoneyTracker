@@ -101,20 +101,35 @@ function Sidebar({ theme, toggleTheme }) {
 
       {/* Bottom */}
       <div style={{ marginTop: 'auto', padding: '16px 8px 0', borderTop: '1px solid var(--border)' }}>
-		  <button
-          onClick={toggleTheme}
+		  <div
           style={{
-            width: '100%', padding: '9px 12px', marginBottom: 12,
-            borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
-            background: 'transparent', color: 'var(--text-subtle)',
-            fontSize: 13, fontWeight: 500, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 8,
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
-            transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: 12, padding: '0 4px',
           }}
         >
-          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
-        </button>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+            {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          </span>
+          <div
+            onClick={toggleTheme}
+            style={{
+              width: 44, height: 24, borderRadius: 99,
+              background: theme === 'dark' ? 'var(--border-light)' : 'var(--cyan)',
+              cursor: 'pointer', position: 'relative',
+              transition: 'background 0.3s ease',
+              flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 3,
+              left: theme === 'dark' ? 3 : 23,
+              width: 18, height: 18, borderRadius: '50%',
+              background: 'white',
+              transition: 'left 0.3s ease',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            }} />
+          </div>
+        </div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
           <div style={{ fontWeight: 600, color: 'var(--text-subtle)', marginBottom: 2 }}>MoneyScope v1.0</div>
           Personal finance tracker
