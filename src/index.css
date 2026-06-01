@@ -28,6 +28,19 @@
   --transition: 0.18s ease;
 }
 
+[data-theme="light"] {
+  --bg:         #F0F4FF;
+  --surface:    #FFFFFF;
+  --card:       #FFFFFF;
+  --card-hover: #F1F5FF;
+  --border:     #DDE3F0;
+  --border-light: #C8D2E8;
+
+  --text:        #0F172A;
+  --text-muted:  #64748B;
+  --text-subtle: #475569;
+}
+
 html, body, #root {
   height: 100%;
   background: var(--bg);
