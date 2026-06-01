@@ -20,7 +20,7 @@ export default function Layout() {
 	const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
 	return (
 		<div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-			<Sidebar />
+			<Sidebar theme={theme} toggleTheme={toggleTheme} />
 			<main style={{
 				flex: 1,
 				overflowY: 'auto',
@@ -33,7 +33,7 @@ export default function Layout() {
 	)
 }
 
-function Sidebar() {
+function Sidebar({ theme, toggle Theme }) {
 	return (
 		<aside style={{
 			width: 220,
